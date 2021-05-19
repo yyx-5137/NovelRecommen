@@ -26,7 +26,6 @@ public class NovelService {
     TypeUtils typeUtils = new TypeUtils();
     @Autowired
     private NovelDao novelDao;
-    OssClient ossClient = new OssClient();
 
     public String insertNovel(NovelInfo novelInfo) {
         int result = novelDao.novelInsert(novelInfo);
@@ -80,7 +79,7 @@ public class NovelService {
     public String getBookContents() throws IOException {
         String contents = "";
 
-        contents = ossClient.GetRandomBook();
+        contents = OssClient.GetRandomBook();
         return contents;
     }
 

@@ -74,4 +74,22 @@ public class UserController {
         result.setObject(userInfo);
         return result;
     }
+    @RequestMapping(value ="/updateImg", method = RequestMethod.POST)
+    public Result UploadImg(@RequestBody Map<String, String> map) throws IOException {
+        // param userId
+        // param password
+        String content = map.get("content");
+        String path = map.get("path");
+        content = content.substring(22);
+
+        boolean isOk = userService.updateImg(content,path);
+        Result result = new Result();
+        if (isOk){
+            result.setStatus(SUCCESS);
+        }else{
+            result.setStatus(FAIL);
+        }
+
+        return result;
+    }
 }
