@@ -142,6 +142,7 @@ public class NovelController {
         result.setStatus(SUCCESS);
         result.setObject(novelService.removeBookShelfByUser(map.get("userId"), map.get("bookId")));
         return result;
+
     }
 
     @RequestMapping(value = "/getBookShelfByUser", method = RequestMethod.POST)
