@@ -31,7 +31,8 @@ public class NovelDao {
 
         return jdbcTemplate.query(sql, ps, BeanPropertyRowMapper.newInstance(NovelInfo.class));
     }
-    public List<NovelInfo> getAllNovelList(){
+
+    public List<NovelInfo> getAllNovelList() {
         String sql = "SELECT novel_info.id,novel_name,state,introduce,cover_url,tag,novel_info.create_time,rating,admin_status,author_info.`name` FROM novel_info,author_info WHERE novel_info.author_id = author_info.id ORDER BY novel_info.id";
         return jdbcTemplate.query(sql, ps, BeanPropertyRowMapper.newInstance(NovelInfo.class));
     }
@@ -47,8 +48,9 @@ public class NovelDao {
         System.out.println(sql);
         return jdbcTemplate.query(sql, ps, BeanPropertyRowMapper.newInstance(ChapterInfo.class));
     }
-    public List<ChapterInfo> getAllBookPaper(int bookId){
-        String sql = "select * from (SELECT * ,ROW_NUMBER() over(ORDER BY id) as rowNum from novel_chapter_info WHERE chapter_id like \""+bookId+"_%\") t1 LIMIT 100";
+
+    public List<ChapterInfo> getAllBookPaper(int bookId) {
+        String sql = "select * from (SELECT * ,ROW_NUMBER() over(ORDER BY id) as rowNum from novel_chapter_info WHERE chapter_id like \"" + bookId + "_%\") t1 LIMIT 100";
         return jdbcTemplate.query(sql, ps, BeanPropertyRowMapper.newInstance(ChapterInfo.class));
 
     }
@@ -59,6 +61,7 @@ public class NovelDao {
         ps.addValue("bookId", bookId);
         return jdbcTemplate.update(sql, ps);
     }
+
     public int removeBookShelfByUser(String userId, int bookId) {
         String sql = "DELETE FROM book_shelf WHERE user_id = :userId AND novel_id = :bookId";
         ps.addValue("userId", userId);
@@ -86,21 +89,22 @@ public class NovelDao {
     }
 
     public List<NovelInfo> getTopBook() {
-        String sql = "SELECT novel_info.id,novel_name,state,introduce,cover_url,tag,novel_info.create_time,rating,author_info.`name` FROM novel_info,author_info WHERE novel_info.author_id = author_info.id ORDER BY novel_info.id DESC";
+        String sql = "SELECT novel_info.id,novel_name,state,introduce,cover_url,tag,novel_info.create_time,rating,author_info.`name` FROM novel_info,author_info WHERE novel_info.author_id = author_info.id AND admin_status = 1 ORDER BY novel_info.id DESC";
         return jdbcTemplate.query(sql, ps, BeanPropertyRowMapper.newInstance(NovelInfo.class));
 
     }
-    public List<NovelInfo> getBookByTag(String tag){
+
+    public List<NovelInfo> getBookByTag(String tag) {
         String sql = "SELECT novel_info.id,novel_name,state,introduce,cover_url,tag,novel_info.create_time,rating,author_info.`name` FROM novel_info,author_info WHERE novel_info.author_id = author_info.id and tag = :tag AND admin_status = 1";
-        ps.addValue("tag",tag);
+        ps.addValue("tag", tag);
         return jdbcTemplate.query(sql, ps, BeanPropertyRowMapper.newInstance(NovelInfo.class));
 
     }
 
-    public int adminUpdate(int adminStatus,int bookId){
+    public int adminUpdate(int adminStatus, int bookId) {
         String sql = "UPDATE novel_info SET admin_status = :adminStatus WHERE id = :bookId";
-        ps.addValue("adminStatus",adminStatus);
-        ps.addValue("bookId",bookId);
+        ps.addValue("adminStatus", adminStatus);
+        ps.addValue("bookId", bookId);
         return jdbcTemplate.update(sql, ps);
 
     }
