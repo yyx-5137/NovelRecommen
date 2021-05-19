@@ -12,4 +12,5 @@ public class NovelInfo {
     private String tag;  //小说标签
     private int rating; //评分
     private String name;//作者名
+    private int adminStatus;
 }

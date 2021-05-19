@@ -3,7 +3,9 @@ package com.novel.recommen.controller;
 import com.novel.recommen.model.NovelInfo;
 import com.novel.recommen.model.Result;
 import com.novel.recommen.service.NovelService;
+import com.novel.recommen.service.UserService;
 import com.rongzhiweilai.extension.annotation.JSONParam;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,8 @@ public class NovelController {
     private NovelService novelService;
     public static final String SUCCESS = "success";
     public static final String FAIL = "fail";
+    public static final String SUCCESSMESSAGE = "OK";
+
 
     @RequestMapping("/hello")
     public String index() {
@@ -32,11 +36,10 @@ public class NovelController {
     }
 
     @RequestMapping(value = "/getAllNovelList", method = RequestMethod.POST)
-    public Result getAllNovelList(@JSONParam String userId) {
-        System.out.println("userid:" + userId);
-        NovelInfo novelInfo = new NovelInfo();
+    public Result getAllNovelList(@JSONParam String id) {
+        System.out.println("id:" + id);
         Result result = new Result();
-        List<NovelInfo> novelInfos = novelService.getAllNovelList(novelInfo);
+        List<NovelInfo> novelInfos = novelService.getAllNovelList();
         if (CollectionUtils.isEmpty(novelInfos)) {
             result.setStatus(FAIL);
             return result;
@@ -47,31 +50,46 @@ public class NovelController {
 
     }
 
+    @RequestMapping(value = "/getUserTop", method = RequestMethod.POST)
+    public Result getUserTop(@JSONParam String id) throws IOException {
+        System.out.println("userid:" + id);
+        Result result = new Result();
+        List<NovelInfo> novelInfos = novelService.getTop10(id);
+        if (CollectionUtils.isEmpty(novelInfos)) {
+            novelInfos = novelService.getAllNovelList();
+        }
+        result.setStatus(SUCCESS);
+        result.setObject(novelInfos);
+        return result;
+
+    }
+
 
     @RequestMapping(value = "/doRate", method = RequestMethod.POST)
-    public Result doRate(@JSONParam String userId) throws IOException {
-        URL url = new URL("http://localhost:8081/doRate");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json; utf-8");
-        con.setRequestProperty("Accept", "application/json");
-        con.setDoOutput(true);
-        String jsonInputString = "{\"userId\": 123,\"novelId\": 123312, \"rating\":4}";
-        try (OutputStream os = con.getOutputStream()) {
-            byte[] input = jsonInputString.getBytes("utf-8");
-            os.write(input, 0, input.length);
+    public Result doRate(@RequestBody Map<String, String> map) throws IOException {
+        System.out.println(map.get("id"));
+        System.out.println(map.get("rate"));
+        System.out.println(map.get("bookId"));
+        String r = novelService.doRate(map.get("id"), map.get("bookId"), map.get("rate"));
+        Result result = new Result();
+        if (r.equals(SUCCESSMESSAGE)) {
+            result.setStatus(SUCCESS);
+            result.setObject(r);
+        } else {
+            result.setStatus(FAIL);
         }
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(con.getInputStream(), "utf-8"))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine = null;
-            while ((responseLine = br.readLine()) != null) {
-                response.append(responseLine.trim());
-            }
-            System.out.println(response.toString());
-        }
+        return result;
+
+    }
+
+    @RequestMapping(value = "/getRate", method = RequestMethod.POST)
+    public Result getRate(@RequestBody Map<String, String> map) throws IOException {
+        System.out.println("id:" + map.get("id"));
+        System.out.println("bookId" + map.get("bookId"));
+        int r = novelService.getRate(map.get("id"), map.get("bookId"));
         Result result = new Result();
         result.setStatus(SUCCESS);
+        result.setObject(r);
         return result;
 
     }
@@ -83,7 +101,8 @@ public class NovelController {
         result.setObject(novelService.getBookContents());
         return result;
     }
-    @RequestMapping(value ="/getAllBookPaper", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/getAllBookPaper", method = RequestMethod.POST)
     public Result getAllBookPaper(@RequestBody Map<String, Integer> map) throws IOException {
         // param begin 1 , @JSONParam int begin, @JSONParam int count
         // param count 10
@@ -94,35 +113,38 @@ public class NovelController {
         return result;
     }
 
-    @RequestMapping(value ="/getBookPaperByCursor", method = RequestMethod.POST)
+    @RequestMapping(value = "/getBookPaperByCursor", method = RequestMethod.POST)
     public Result getBookPaperByCursor(@RequestBody Map<String, Integer> map) throws IOException {
         // param begin 1 , @JSONParam int begin, @JSONParam int count
         // param count 10
         // param bookId
         Result result = new Result();
         result.setStatus(SUCCESS);
-        result.setObject(novelService.getBookPaperByCursor(map.get("begin"),map.get("count"),map.get("bookId")));
+        result.setObject(novelService.getBookPaperByCursor(map.get("begin"), map.get("count"), map.get("bookId")));
         return result;
     }
-    @RequestMapping(value ="/addBookShelfByUser", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/addBookShelfByUser", method = RequestMethod.POST)
     public Result addBookShelfByUser(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         // param bookId
         Result result = new Result();
         result.setStatus(SUCCESS);
-        result.setObject(novelService.addBookShelfByUser(map.get("userId"),map.get("bookId")));
+        result.setObject(novelService.addBookShelfByUser(map.get("userId"), map.get("bookId")));
         return result;
     }
-    @RequestMapping(value ="/removeBookShelfByUser", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/removeBookShelfByUser", method = RequestMethod.POST)
     public Result removeBookShelfByUser(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         // param bookId
         Result result = new Result();
         result.setStatus(SUCCESS);
-        result.setObject(novelService.removeBookShelfByUser(map.get("userId"),map.get("bookId")));
+        result.setObject(novelService.removeBookShelfByUser(map.get("userId"), map.get("bookId")));
         return result;
     }
-    @RequestMapping(value ="/getBookShelfByUser", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/getBookShelfByUser", method = RequestMethod.POST)
     public Result getBookShelfByUser(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         Result result = new Result();
@@ -131,16 +153,16 @@ public class NovelController {
         return result;
     }
 
-    @RequestMapping(value ="/isAddBookShelf", method = RequestMethod.POST)
+    @RequestMapping(value = "/isAddBookShelf", method = RequestMethod.POST)
     public Result isAddBookShelf(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         Result result = new Result();
         result.setStatus(SUCCESS);
-        result.setObject(novelService.isAddBookShelf(map.get("userId"),map.get("bookId")));
+        result.setObject(novelService.isAddBookShelf(map.get("userId"), map.get("bookId")));
         return result;
     }
 
-    @RequestMapping(value ="/searchBook", method = RequestMethod.POST)
+    @RequestMapping(value = "/searchBook", method = RequestMethod.POST)
     public Result searchBook(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         Result result = new Result();
@@ -148,7 +170,8 @@ public class NovelController {
         result.setObject(novelService.searchBook(map.get("value")));
         return result;
     }
-    @RequestMapping(value ="/getTopBook", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/getTopBook", method = RequestMethod.POST)
     public Result getTopBook(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         Result result = new Result();
@@ -156,7 +179,8 @@ public class NovelController {
         result.setObject(novelService.getTopBook());
         return result;
     }
-    @RequestMapping(value ="/getBookByTag", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/getBookByTag", method = RequestMethod.POST)
     public Result getBookByTag(@RequestBody Map<String, String> map) throws IOException {
         // param userId
         Result result = new Result();
@@ -164,7 +188,15 @@ public class NovelController {
         result.setObject(novelService.getBookByTag(map.get("tag")));
         return result;
     }
-
+    @RequestMapping(value = "/adminBook", method = RequestMethod.POST)
+    public Result adminBook(@RequestBody Map<String, String> map) throws IOException {
+        System.out.println(map.get("adminStatus")+"______"+map.get("bookId"));
+        // param userId
+        Result result = new Result();
+        result.setStatus(SUCCESS);
+        result.setObject(novelService.admin(map.get("adminStatus"),map.get("bookId")));
+        return result;
+    }
 
 
 }
